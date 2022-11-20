@@ -2,12 +2,15 @@ version: '3'
 services:
   fluent-bit:
     image: cr.fluentbit.io/fluent/fluent-bit
+    restart: always
     ports:
       - "24224:24224"
       - "24224:24224/udp"
     volumes:
       - ./:/fluent-bit/etc/
-  
+    # command:
+    #   - /fluent-bit/bin/fluent-bit -p script=filters.lua -c /fluent-bit/etc/fluent-bit.conf
+ 
   flog:
     image: mingrammer/flog
     depends_on:
@@ -16,6 +19,19 @@ services:
     logging:
       driver: fluentd
       options:
-        tag: apache
+        fluentd-async-connect: "true"
+        fluentd-retry-wait: 1s
+        fluentd-max-retries: 30
+        tag: apache        
 
-
+  # nginx:
+  #   image: kscarlett/nginx-log-generator
+  #   depends_on:
+  #     - fluent-bit
+  #   logging:
+  #     driver: fluentd
+  #     options:
+  #       fluentd-async-connect: "true"
+  #       fluentd-retry-wait: 1s
+  #       fluentd-max-retries: 30
+  #       tag: nginx
